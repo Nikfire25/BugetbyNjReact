@@ -7,19 +7,22 @@ import DisplayBalances from "./Components/DisplayBalances";
 import { useEffect, useState } from "react";
 import EntryLines from "./Components/EntryLines";
 import ModalEdit from "./Components/ModalEdit";
+import { useSelector } from "react-redux";
 
 function App() {
-  const [entries, setEnteries] = useState(initEnteries);
   const [title, setTitle] = useState("");
   const [value, setValue] = useState("");
   const [isExpense, setIsExpense] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [entryId, setEntryId] = useState();
-  const income = entries
+  const enteries = useSelector((state) => state.entries);
+  const isOpenRedux = useSelector((state) => state.modals.isOpen);
+
+  const income = enteries
     .filter((entry) => !entry.isExpense)
     .reduce((total, entry) => (total += +entry.value), 0);
 
-  const expense = entries
+  const expense = enteries
     .filter((entry) => entry.isExpense)
     .reduce((total, entry) => (total += +entry.value), 0);
 
@@ -32,44 +35,39 @@ function App() {
   };
 
   useEffect(() => {
-    if (!isOpen && entryId) {
-      const index = entries.findIndex((entry) => entry.id === entryId);
-      const newEnteries = [...entries];
+    if (!isOpenRedux && entryId) {
+      const index = enteries.findIndex((entry) => entry.id === entryId);
+      const newEnteries = [...enteries];
       newEnteries[index].title = title;
       newEnteries[index].value = value;
       newEnteries[index].isExpense = isExpense;
-      setEnteries(newEnteries);
+      // setEnteries(newEnteries);
       resetEntry();
     }
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const deleteEntry = (id) => {
-    setEnteries((prev) => prev.filter((entry) => entry.id !== id));
-  };
-
   const addEntry = (title, value, isExpense) => {
-    const res = entries.concat({
-      id: entries.length + 1,
+    const res = enteries.concat({
+      id: enteries.length + 1,
       title,
       value,
       isExpense,
     });
-    setEnteries(res);
+    // setEnteries(res);
     resetEntry();
   };
 
   const editEntry = (id) => {
     if (id) {
-      const index = entries.findIndex((entry) => entry.id === id);
-      const entry = entries[index];
+      const index = enteries.findIndex((entry) => entry.id === id);
+      const entry = enteries[index];
       setEntryId(id);
       setTitle(entry.title);
       setValue(entry.value);
       setIsExpense(entry.isExpense);
       setIsOpen(true);
     }
-    console.log(id, "is edited");
   };
 
   return (
@@ -96,8 +94,7 @@ function App() {
 
         <MainHeader title="History" type="h3" />
         <EntryLines
-          entries={entries}
-          deleteEntry={deleteEntry}
+          entries={enteries}
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           editEntry={editEntry}
@@ -116,7 +113,7 @@ function App() {
           setIsExpense={setIsExpense}
         />
         <ModalEdit
-          isOpen={isOpen}
+          isOpen={isOpenRedux}
           setIsOpen={setIsOpen}
           title={title}
           value={value}
@@ -131,10 +128,3 @@ function App() {
 }
 
 export default App;
-
-var initEnteries = [
-  { id: 1, title: "Work Income", value: 1000, isExpense: false },
-  { id: 2, title: "Water Bill", value: 20, isExpense: true },
-  { id: 3, title: "Rent", value: 300, isExpense: true },
-  { id: 4, title: "Power Bill", value: 50, isExpense: true },
-];
